@@ -1,0 +1,8 @@
+.env
+.venv38/
+__pycache__/
+*.pyc
+images/
+logs/
+reports/
+.idea/workspace.xml
