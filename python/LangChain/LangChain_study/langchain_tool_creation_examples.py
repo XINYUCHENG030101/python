@@ -1,12 +1,12 @@
 import os
-from typing import Type
+from typing import Any, Type
 
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents import create_agent
+from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableLambda
 from langchain_core.tools import BaseTool, StructuredTool, Tool, tool
 from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
 
 
 # 方式 1：使用 @tool 装饰器创建最简单的工具。
@@ -60,8 +60,8 @@ class EchoInput(BaseModel):
 
 
 class EchoTool(BaseTool):
-    name = "echo_text"
-    description = "把输入文本原样返回。"
+    name: str = "echo_text"
+    description: str = "把输入文本原样返回。"
     args_schema: Type[BaseModel] = EchoInput
 
     def _run(self, text: str) -> str:
@@ -88,7 +88,7 @@ runnable_tool = RunnableLambda(summarize_payload).as_tool(
 )
 
 
-def build_agent() -> AgentExecutor:
+def build_agent() -> Any:
     tools = [multiply, get_weather, structured_add, search_tool, echo_tool, runnable_tool]
 
     llm = ChatOpenAI(
@@ -98,19 +98,11 @@ def build_agent() -> AgentExecutor:
         temperature=0,
     )
 
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                "你是一个会调用工具的助手。需要计算、检索或查询天气时优先使用工具。",
-            ),
-            ("human", "{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ]
+    return create_agent(
+        model=llm,
+        tools=tools,
+        system_prompt="你是一个会调用工具的助手。需要计算、检索或查询天气时优先使用工具。",
     )
-
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    return AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 
 if __name__ == "__main__":
@@ -125,10 +117,8 @@ if __name__ == "__main__":
     if not api_key:
         print("未检测到 DEEPSEEK_API_KEY，跳过 agent 示例。")
     else:
-        agent_executor = build_agent()
-        agent_result = agent_executor.invoke(
-            {
-                "input": "请先用 structured_add 计算 8 加 9，再告诉我北京天气，最后把结果整理成一句话。"
-            }
+        agent_app = build_agent()
+        agent_result = agent_app.invoke(
+            {"messages": [HumanMessage(content="请先用 structured_add 计算 8 加 9，再告诉我北京天气，最后把结果整理成一句话。")]}
         )
-        print("Agent 输出：", agent_result["output"])
+        print("Agent 输出：", agent_result["messages"][-1].content)

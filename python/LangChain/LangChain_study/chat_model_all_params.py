@@ -1,12 +1,7 @@
-from nt import pipe
-from typing import Any
-
-
 import os
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableSequence  # 新增：显式使用 RunnableSequence 定义链
 from langchain_openai import ChatOpenAI
 
 
@@ -53,9 +48,8 @@ prompt = ChatPromptTemplate.from_messages(
 
 parser = StrOutputParser()
 
-# 新增：使用 RunnableSequence 按顺序组合 prompt、llm 和 parser
-#chain = RunnableSequence(prompt, llm, parser)
-#chain = prompt | llm | parser
-chain = pipe(prompt, llm, parser)
+# 使用 LangChain Runnable 语法按顺序组合 prompt、llm 和 parser。
+# 这里不能使用 `nt.pipe`，否则会调用到操作系统模块里的同名函数。
+chain = prompt | llm | parser
 resp = chain.invoke({"text": "一只小狗_____"})
 print(resp)
