@@ -2,10 +2,10 @@ import os
 import unittest
 
 from common.report import ReportTextRunner
-from tests.Forum_details import ForumDetailsTest
-from tests.Forum_edit import ForumEditTest
-from tests.Forum_list import ForumListTest
-from tests.Forum_login import ForumLoginTest
+from tests.Blog_details import BlogDetailsTest
+from tests.Blog_edit import BlogEditTest
+from tests.Blog_list import BlogListTest
+from tests.Blog_login import BlogLoginTest
 
 
 def build_suite():
@@ -13,13 +13,13 @@ def build_suite():
     loader = unittest.defaultTestLoader
 
     available = {
-        "login": ForumLoginTest,
-        "list": ForumListTest,
-        "edit": ForumEditTest,
-        "details": ForumDetailsTest,
+        "login": BlogLoginTest,
+        "list": BlogListTest,
+        "edit": BlogEditTest,
+        "details": BlogDetailsTest,
     }
 
-    selected = os.getenv("FORUM_SUITE", "all").lower()
+    selected = os.getenv("BLOG_SUITE", "all").lower()
     if selected == "all":
         for case in available.values():
             suite.addTests(loader.loadTestsFromTestCase(case))
@@ -36,5 +36,3 @@ if __name__ == "__main__":
     runner = ReportTextRunner(verbosity=2)
     result = runner.run(build_suite())
     raise SystemExit(0 if result.wasSuccessful() else 1)
-   
-

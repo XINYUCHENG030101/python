@@ -1,13 +1,15 @@
-# UI 自动化测试框架
+# 博客系统 UI 自动化
 
-这是一个基于 `selenium + unittest + Page Object` 的可复用 UI 自动化测试框架，适用于论坛类 Web 系统，也可以快速迁移到其他页面型系统。
+基于 `selenium + unittest + Page Object` 的 UI 自动化测试项目，覆盖博客系统的登录、未登录拦截、列表、写博客、编辑删除和详情页。对外就用这个名称。磁盘目录仍是 `Forum_system_testing`，下面的命令路径按这个目录来。
+
+被测地址：`http://115.190.63.202:9090/blog_login.html`
 
 ## 目录结构
 
 ```text
-Forum_system_testing/
+Forum_system_testing/   # 磁盘目录。对外名称是「博客系统 UI 自动化」
 |-- config/          # 配置层
-|-- common/          # 公共能力，驱动、基类、日志、报告
+|-- common/          # 公共能力：驱动、基类、日志、报告
 |-- pages/           # 页面对象层
 |-- tests/           # 测试用例层
 |-- .env.example     # 环境变量示例
@@ -15,15 +17,12 @@ Forum_system_testing/
 |-- run.py           # 统一运行入口
 ```
 
-## 框架能力
+## 覆盖范围
 
-- 支持通过 `.env` 或命令行参数切换环境
-- 支持统一驱动初始化和浏览器生命周期管理
-- 支持页面对象封装，降低定位器和业务逻辑耦合
-- 支持失败自动截图
-- 支持输出日志文件
-- 支持生成 HTML 测试报告
-- 支持按套件执行 `login`、`list`、`edit`、`details` 或 `all`
+- `login`：正确账号登录成功并写入 token；错误密码、用户不存在、账号或密码为空；未登录访问列表、详情、编辑页会回到登录页；写博客页提交也会被拦截；注销后再次访问列表需要登录
+- `list`：每篇博客都有标题、`yyyy-MM-dd HH:mm` 日期、摘要和详情链接；左侧用户名为当前账号，GitHub 链接为 https 地址；导航进入写博客页且按钮文案为「发布文章」
+- `edit`：发布一篇带时间戳的博客并校验列表正文；另有一条在编辑框里逐字输入后再发布。再编辑标题和正文，确认创建时间不变，最后删除并确认列表中消失。用例结束会清理自己创建的文章
+- `details`：详情地址、标题、日期、正文片段、作者和 GitHub 与列表一致，作者本人能看到编辑和删除，返回后首篇标题不变
 
 ## 环境准备
 
@@ -36,30 +35,31 @@ copy .env.example .env
 2. 安装依赖
 
 ```powershell
-& .\.venv38\Scripts\python.exe -m pip install -r .\requirements.txt
+python -m venv .venv
+& .\.venv\Scripts\python.exe -m pip install -r .\requirements.txt
 ```
 
 ## 运行方式
 
-### 执行全部测试
+在项目根目录执行，并设置 `PYTHONPATH`：
 
 ```powershell
-$env:PYTHONPATH='E:\python\Forum_system_testing'
-& .\.venv38\Scripts\python.exe .\run.py
+$env:PYTHONPATH='C:\Users\User\Desktop\github\python\Forum_system_testing'
+& .\.venv\Scripts\python.exe .\run.py
 ```
 
-### 只执行登录套件
+只跑登录套件：
 
 ```powershell
-$env:PYTHONPATH='E:\python\Forum_system_testing'
-& .\.venv38\Scripts\python.exe .\run.py --suite login
+$env:PYTHONPATH='C:\Users\User\Desktop\github\python\Forum_system_testing'
+& .\.venv\Scripts\python.exe .\run.py --suite login
 ```
 
-### 指定地址并启用无头模式
+指定地址并启用无头模式：
 
 ```powershell
-$env:PYTHONPATH='E:\python\Forum_system_testing'
-& .\.venv38\Scripts\python.exe .\run.py --suite all --base-url http://127.0.0.1:9580 --headless
+$env:PYTHONPATH='C:\Users\User\Desktop\github\python\Forum_system_testing'
+& .\.venv\Scripts\python.exe .\run.py --suite all --base-url http://115.190.63.202:9090 --headless
 ```
 
 ## 输出产物
@@ -84,5 +84,6 @@ $env:PYTHONPATH='E:\python\Forum_system_testing'
 ## 注意事项
 
 - 默认浏览器为 Chrome
-- 默认测试地址为 `http://127.0.0.1:9580`
-- 执行前请确保被测系统已启动并可访问
+- 默认账号为 `zhangsan` / `123456`
+- 执行前请确保博客系统可访问
+- `edit` 套件会发布带时间戳的文章，并在用例结束时删掉自己创建的那几篇

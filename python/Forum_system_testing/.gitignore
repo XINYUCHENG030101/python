@@ -1,8 +1,11 @@
 .env
+.venv/
 .venv38/
+.drivers/
+.trae/
+.idea/
 __pycache__/
 *.pyc
 images/
 logs/
 reports/
-.idea/workspace.xml

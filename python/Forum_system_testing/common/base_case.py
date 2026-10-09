@@ -1,5 +1,6 @@
 import unittest
 
+from common.base_page import BasePage
 from common.driver_factory import create_driver
 from common.logger import get_logger
 
@@ -25,10 +26,9 @@ class BaseCase(unittest.TestCase):
         self.logger.info("开始执行用例: %s", self.id())
 
     def save_failure_screenshot(self):
-        page = getattr(self, "page", None)
-        if page is not None:
-            file_path = page.screenshot(self.id().split(".")[-1])
-            self.logger.error("用例失败，已截图: %s", file_path)
+        page = getattr(self, "page", None) or BasePage(self.driver)
+        file_path = page.screenshot(self.id().split(".")[-1])
+        self.logger.error("用例失败，已截图: %s", file_path)
 
     def run(self, result=None):
         super().run(result)

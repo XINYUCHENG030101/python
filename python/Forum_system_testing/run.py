@@ -3,7 +3,7 @@ import os
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="运行 UI 自动化测试")
+    parser = argparse.ArgumentParser(description="运行博客系统 UI 自动化测试")
     parser.add_argument("--suite", default=None, help="指定测试套件: login/list/edit/details/all")
     parser.add_argument("--base-url", default=None, help="指定被测系统地址")
     parser.add_argument("--headless", action="store_true", help="是否启用无头模式")
@@ -13,13 +13,13 @@ def parse_args():
 
 def apply_runtime_args(args):
     if args.suite:
-        os.environ["FORUM_SUITE"] = args.suite
+        os.environ["BLOG_SUITE"] = args.suite
     if args.base_url:
-        os.environ["FORUM_BASE_URL"] = args.base_url
+        os.environ["BLOG_BASE_URL"] = args.base_url
     if args.headless:
-        os.environ["FORUM_HEADLESS"] = "true"
+        os.environ["BLOG_HEADLESS"] = "true"
     if args.report_name:
-        os.environ["FORUM_REPORT_NAME"] = args.report_name
+        os.environ["BLOG_REPORT_NAME"] = args.report_name
 
 
 if __name__ == "__main__":
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     init_logging()
     logger = get_logger("runner")
     started_at = now()
-    logger.info("开始执行 UI 自动化测试")
+    logger.info("开始执行博客系统 UI 自动化测试")
 
     runner = ReportTextRunner(verbosity=2)
     result = runner.run(build_suite())
