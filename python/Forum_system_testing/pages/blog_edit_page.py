@@ -34,6 +34,11 @@ class BlogEditPage(BasePage):
     def submit(self):
         self.js_click(*self.SUBMIT_BUTTON)
 
+    def submit_and_get_message(self):
+        self.capture_alert()
+        self.submit()
+        return self.wait_dialog_message()
+
     def publish_blog(self, title, content="## 由 UI 自动化测试发布"):
         self.fill_and_submit(title, content)
         self.wait_url_contains("blog_list.html")

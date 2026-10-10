@@ -1,5 +1,6 @@
 import datetime
 
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -23,22 +24,45 @@ class BasePage:
     def open(self, url):
         self.driver.get(url)
 
+    def _wait_element(self, by, locator, condition="visibility"):
+        if condition == "clickable":
+            expected = EC.element_to_be_clickable((by, locator))
+        elif condition == "presence":
+            expected = EC.presence_of_element_located((by, locator))
+        else:
+            expected = EC.visibility_of_element_located((by, locator))
+        try:
+            return self.wait.until(expected)
+        except TimeoutException as exc:
+            from common.ai import healer
+
+            healed = healer.try_heal(
+                self.driver,
+                by=by,
+                locator=locator,
+                condition=condition,
+                error=exc,
+            )
+            if healed is not None:
+                return healed
+            raise
+
     def find(self, by, locator):
-        return self.wait.until(EC.visibility_of_element_located((by, locator)))
+        return self._wait_element(by, locator, condition="visibility")
 
     def find_all(self, by, locator):
         return self.wait.until(EC.presence_of_all_elements_located((by, locator)))
 
     def click(self, by, locator):
-        self.wait.until(EC.element_to_be_clickable((by, locator))).click()
+        self._wait_element(by, locator, condition="clickable").click()
 
     def js_click(self, by, locator):
-        element = self.wait.until(EC.element_to_be_clickable((by, locator)))
+        element = self._wait_element(by, locator, condition="clickable")
         self.driver.execute_script("arguments[0].click();", element)
         return element
 
     def open_href(self, by, locator, fragment):
-        element = self.wait.until(EC.element_to_be_clickable((by, locator)))
+        element = self._wait_element(by, locator, condition="clickable")
         href = element.get_attribute("href")
         if not href or href.endswith("#"):
             raise AssertionError(f"无法通过 href 打开: {locator}")
@@ -100,6 +124,17 @@ class BasePage:
             window.confirm = function (message) {
                 window.__dialogMessage = String(message);
                 return true;
+            };
+            """
+        )
+
+    def capture_confirm_dismiss(self):
+        self.driver.execute_script(
+            """
+            window.__dialogMessage = null;
+            window.confirm = function (message) {
+                window.__dialogMessage = String(message);
+                return false;
             };
             """
         )

@@ -34,3 +34,19 @@ DETAIL_URL = f"{BASE_URL}/blog_detail.html"
 
 REPORT_FILE = REPORTS_DIR / REPORT_NAME
 LOG_FILE = LOGS_DIR / LOG_FILE_NAME
+AI_FAILURES_DIR = REPORTS_DIR / "ai_failures"
+
+AI_ENABLED = os.getenv("BLOG_AI_ENABLED", "false").lower() == "true"
+AI_BASE_URL = os.getenv("BLOG_AI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+AI_API_KEY = os.getenv("BLOG_AI_API_KEY", "")
+AI_MODEL = os.getenv("BLOG_AI_MODEL", "gpt-4o-mini")
+AI_TIMEOUT = int(os.getenv("BLOG_AI_TIMEOUT", "60"))
+AI_FAILURE_ANALYSIS = os.getenv("BLOG_AI_FAILURE_ANALYSIS", "true").lower() == "true"
+AI_REPORT_SUMMARY = os.getenv("BLOG_AI_REPORT_SUMMARY", "true").lower() == "true"
+AI_UPLOAD_SCREENSHOT = os.getenv("BLOG_AI_UPLOAD_SCREENSHOT", "false").lower() == "true"
+AI_LOG_TAIL_LINES = int(os.getenv("BLOG_AI_LOG_TAIL_LINES", "80"))
+AI_GEN_DATA = os.getenv("BLOG_AI_GEN_DATA", "false").lower() == "true"
+AI_HEALER = os.getenv("BLOG_AI_HEALER", "false").lower() == "true"
+AI_HEALER_DOM_CHARS = int(os.getenv("BLOG_AI_HEALER_DOM_CHARS", "12000"))
+AI_DATA_CONTENT_MAX = int(os.getenv("BLOG_AI_DATA_CONTENT_MAX", "120"))
+AI_HEALER_DIR = REPORTS_DIR / "ai_healer"

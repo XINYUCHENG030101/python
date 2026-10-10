@@ -15,6 +15,38 @@ class BlogDetailPage(BasePage):
     EDIT_BUTTON = (By.XPATH, "//div[contains(@class,'operating')]//button[normalize-space()='编辑']")
     DELETE_BUTTON = (By.XPATH, "//div[contains(@class,'operating')]//button[normalize-space()='删除']")
     DELETE_CONFIRM = "确定删除?"
+    INTERNAL_ERROR = "内部错误, 请联系管理员"
+
+    def open_blog_id(self, blog_id):
+        super().open(f"{settings.DETAIL_URL}?blogId={blog_id}")
+
+    def open_blog_id_expecting_alert(self, blog_id):
+        self.open_blog_id(blog_id)
+        return self.alert_text_and_accept().strip()
+
+    def content_fields(self):
+        return self.driver.execute_script(
+            """
+            var title = document.querySelector('.content .title');
+            var date = document.querySelector('.content .date');
+            var body = document.querySelector('#detail');
+            return {
+                title: title ? title.textContent.trim() : '',
+                date: date ? date.textContent.trim() : '',
+                body: body ? body.textContent.trim() : ''
+            };
+            """
+        )
+
+    def action_labels(self):
+        self.driver.implicitly_wait(0)
+        try:
+            return [
+                element.text.strip()
+                for element in self.driver.find_elements(*self.ACTION_BUTTONS)
+            ]
+        finally:
+            self.driver.implicitly_wait(settings.IMPLICIT_WAIT)
 
     def wait_for_content(self):
         self.wait_text_non_empty(*self.TITLE)
@@ -60,6 +92,11 @@ class BlogDetailPage(BasePage):
         message = self.wait_dialog_message().strip()
         self.wait_url_contains("blog_list.html")
         return message
+
+    def delete_and_cancel(self):
+        self.capture_confirm_dismiss()
+        self.js_click(*self.DELETE_BUTTON)
+        return self.wait_dialog_message().strip()
 
     @staticmethod
     def visible_fragments(raw_content):

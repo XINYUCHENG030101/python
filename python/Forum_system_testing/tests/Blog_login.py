@@ -63,6 +63,15 @@ class BlogLoginTest(BaseCase):
         self.assertIn("blog_login.html", current_url)
         self.assertEqual(self.page.dialog_heading(), self.page.DIALOG_HEADING)
 
+    def test_guest_editor_open_stays_on_edit(self):
+        # 写博客页不在打开时拦截；提交时才回登录（见下一条）
+        editor = BlogEditPage(self.driver)
+        editor.open()
+        self.assertIn("blog_edit.html", self.driver.current_url)
+        self.assertIsNone(self.page.token())
+        self.assertTrue(editor.is_present(*editor.TITLE_INPUT))
+        self.assertEqual(editor.submit_label(), editor.SUBMIT_LABEL)
+
     def test_guest_editor_submit_redirects_to_login(self):
         title = f"未登录提交-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
         editor = BlogEditPage(self.driver)

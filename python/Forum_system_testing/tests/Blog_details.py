@@ -35,3 +35,13 @@ class BlogDetailsTest(BaseCase):
         self.page.go_home()
         self.assertIn("blog_list.html", self.driver.current_url)
         self.assertEqual(self.list_page.get_first_blog_summary()[0], expected_title)
+
+    def test_invalid_blog_id_detail(self):
+        message = self.page.open_blog_id_expecting_alert("999999")
+        self.assertEqual(message, self.page.INTERNAL_ERROR)
+        self.assertIn("blogId=999999", self.driver.current_url)
+        fields = self.page.content_fields()
+        self.assertEqual(fields["title"], "")
+        self.assertEqual(fields["date"], "")
+        self.assertEqual(fields["body"], "")
+        self.assertEqual(self.page.action_labels(), [])

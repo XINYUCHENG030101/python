@@ -19,7 +19,8 @@ class ReportTextRunner(unittest.TextTestRunner):
     resultclass = ReportTextResult
 
 
-def _build_case_rows(items, status, details_getter=None):
+def _build_case_rows(items, status, analyses=None, details_getter=None):
+    analyses = analyses or {}
     rows = []
     for entry in items:
         if isinstance(entry, tuple):
@@ -30,25 +31,41 @@ def _build_case_rows(items, status, details_getter=None):
             details = ""
 
         details_text = details_getter(details) if details_getter else details
+        test_id = test_case.id()
+        ai_text = analyses.get(test_id) or getattr(test_case, "_ai_analysis", "") or ""
+        if status in {"FAIL", "ERROR"} and not ai_text:
+            ai_text = "未启用或分析跳过"
+        elif status not in {"FAIL", "ERROR"}:
+            ai_text = "-"
+
         rows.append(
             "<tr>"
-            f"<td>{html.escape(test_case.id())}</td>"
+            f"<td>{html.escape(test_id)}</td>"
             f"<td>{status}</td>"
             f"<td><pre>{html.escape(details_text)}</pre></td>"
+            f"<td><pre>{html.escape(ai_text)}</pre></td>"
             "</tr>"
         )
     return rows
 
 
-def generate_html_report(result, started_at, ended_at):
+def generate_html_report(result, started_at, ended_at, analyses=None, summary=None):
     settings.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     duration = (ended_at - started_at).total_seconds()
+    analyses = analyses or {}
     rows = []
-    rows.extend(_build_case_rows(result.successes, "PASS"))
-    rows.extend(_build_case_rows(result.failures, "FAIL"))
-    rows.extend(_build_case_rows(result.errors, "ERROR"))
-    rows.extend(_build_case_rows(result.skipped, "SKIP"))
+    rows.extend(_build_case_rows(result.successes, "PASS", analyses))
+    rows.extend(_build_case_rows(result.failures, "FAIL", analyses))
+    rows.extend(_build_case_rows(result.errors, "ERROR", analyses))
+    rows.extend(_build_case_rows(result.skipped, "SKIP", analyses))
+
+    summary_html = ""
+    if summary:
+        summary_html = (
+            "<h2>AI 摘要</h2>"
+            f"<pre class=\"ai-summary\">{html.escape(summary)}</pre>"
+        )
 
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -62,6 +79,7 @@ def generate_html_report(result, started_at, ended_at):
     th {{ background: #f4f4f4; }}
     .summary span {{ margin-right: 16px; }}
     pre {{ white-space: pre-wrap; word-break: break-word; margin: 0; }}
+    .ai-summary {{ background: #f9fafb; border: 1px solid #eee; padding: 12px; }}
   </style>
 </head>
 <body>
@@ -76,12 +94,14 @@ def generate_html_report(result, started_at, ended_at):
     <span>错误: {len(result.errors)}</span>
     <span>跳过: {len(result.skipped)}</span>
   </div>
+  {summary_html}
   <table>
     <thead>
       <tr>
         <th>用例</th>
         <th>结果</th>
         <th>详情</th>
+        <th>AI 分析</th>
       </tr>
     </thead>
     <tbody>

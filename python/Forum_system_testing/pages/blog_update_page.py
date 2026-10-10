@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 
 from common.base_page import BasePage
-from pages.markdown_editor import editor_content, set_markdown, wait_markdown_contains
+from pages.markdown_editor import editor_content, set_markdown, type_markdown, wait_markdown_contains
 
 
 class BlogUpdatePage(BasePage):
@@ -49,9 +49,20 @@ class BlogUpdatePage(BasePage):
     def submit_label(self):
         return self.find(*self.SUBMIT_BUTTON).get_attribute("value")
 
+    def type_content(self, content):
+        return type_markdown(self.driver, content)
+
     def update_blog(self, title, content):
         self.wait_loaded()
         self.input_text(*self.TITLE_INPUT, value=title)
         set_markdown(self.driver, content)
         self.js_click(*self.SUBMIT_BUTTON)
         self.wait_url_contains("blog_list.html")
+
+    def update_typed_blog(self, title, content):
+        self.wait_loaded()
+        self.input_text(*self.TITLE_INPUT, value=title)
+        typed = self.type_content(content)
+        self.js_click(*self.SUBMIT_BUTTON)
+        self.wait_url_contains("blog_list.html")
+        return typed

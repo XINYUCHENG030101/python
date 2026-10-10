@@ -24,10 +24,20 @@ class BaseCase(unittest.TestCase):
     def setUp(self):
         self.logger = get_logger(self.__class__.__name__)
         self.logger.info("开始执行用例: %s", self.id())
+        self._failure_context = {}
 
     def save_failure_screenshot(self):
         page = getattr(self, "page", None) or BasePage(self.driver)
         file_path = page.screenshot(self.id().split(".")[-1])
+        current_url = ""
+        try:
+            current_url = self.driver.current_url if self.driver else ""
+        except Exception:
+            current_url = ""
+        self._failure_context = {
+            "screenshot": str(file_path),
+            "url": current_url,
+        }
         self.logger.error("用例失败，已截图: %s", file_path)
 
     def run(self, result=None):
